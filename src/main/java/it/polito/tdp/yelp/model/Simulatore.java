@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.Random;
 import java.util.Set;
 
 import org.jgrapht.Graph;
@@ -35,7 +34,6 @@ public class Simulatore {
 	
 	public Simulatore(Graph<User,DefaultWeightedEdge> grafo) {
 		this.grafo = grafo ;
-		
 	}
 	
 	public void init(int x1, int x2) {
@@ -51,6 +49,9 @@ public class Simulatore {
 			this.giornalisti.add(new Giornalista(id));
 		}
 		
+		// creo la coda
+		this.queue = new PriorityQueue<>();
+		
 		// pre-carico la coda
 		for(Giornalista g: this.giornalisti) {
 			User intervistato = selezionaIntervistato(this.grafo.vertexSet()) ;
@@ -65,27 +66,23 @@ public class Simulatore {
 					g
 					));
 		}
-		
-		
 	}
 	
 	public void run() {
-		
 		while(!this.queue.isEmpty() && this.intervistati.size()<x2) {
 			Event e = this.queue.poll() ;
 			this.numeroGiorni = e.getGiorno();
 			
 			processEvent(e);
 		}
-		
 	}
 	
 	
 
 	private void processEvent(Event e) {
 		switch(e.getType()) {
+		
 		case DA_INTERVISTARE:
-			
 			double caso = Math.random();
 			
 			if(caso<0.6) {
@@ -125,11 +122,25 @@ public class Simulatore {
 			}
 			
 			break;
+			
 		case FERIE:
+			User vicino = selezionaAdiacente(e.getIntervistato());
+			if(vicino == null) {
+				vicino = selezionaIntervistato(this.grafo.vertexSet());
+			}
+			
+			this.queue.add( new Event(
+					e.getGiorno()+1,
+					EventType.DA_INTERVISTARE,
+					vicino,
+					e.getGiornalista()
+					)) ;
+			
+			this.intervistati.add(vicino);
+			e.getGiornalista().incrementaNumeroIntervistati();
+
 			break;
-		
 		}
-		
 	}
 
 	public int getX1() {
@@ -166,6 +177,9 @@ public class Simulatore {
 		Set<User> candidati = new HashSet<User>(lista);
 		candidati.removeAll(this.intervistati);
 		
+		if (candidati.size()==0)
+			return null;
+		
 		int scelto = (int)(Math.random()*candidati.size());
 		
 		return (new ArrayList<User>(candidati)).get(scelto) ;
@@ -198,8 +212,6 @@ public class Simulatore {
 		
 		int scelto = (int)(Math.random()*migliori.size()) ;
 		return migliori.get(scelto);
-		
-		
 	}
 	
 }

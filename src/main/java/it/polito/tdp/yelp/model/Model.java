@@ -15,6 +15,10 @@ public class Model {
 	private Graph<User, DefaultWeightedEdge> grafo ;
 	private List<User> utenti ;
 	
+	// risultati del simulatore
+	private int numeroGiorni ;
+	private List<Giornalista> giornalisti ;
+	
 	public String creaGrafo(int minRevisioni, int anno) {
 		
 		this.grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
@@ -56,8 +60,24 @@ public class Model {
 		return result ;
 	}
 	
+	public void simula(int intervistatori, int utenti) {
+		Simulatore sim = new Simulatore(this.grafo);
+		sim.init(intervistatori, utenti);
+		sim.run();
+		this.giornalisti = sim.getGiornalisti();
+		this.numeroGiorni = sim.getNumeroGiorni();
+	}
+	
 	public List<User> getUsers() {
 		return this.utenti;
+	}
+
+	public int getNumeroGiorni() {
+		return numeroGiorni;
+	}
+
+	public List<Giornalista> getGiornalisti() {
+		return giornalisti;
 	}
 	
 }
