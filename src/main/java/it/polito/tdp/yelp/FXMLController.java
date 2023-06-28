@@ -5,9 +5,13 @@
 package it.polito.tdp.yelp;
 
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.yelp.model.Model;
+import it.polito.tdp.yelp.model.SimulatorResult;
+import it.polito.tdp.yelp.model.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -38,13 +42,13 @@ public class FXMLController {
     private TextField txtX2; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbAnno"
-    private ComboBox<?> cmbAnno; // Value injected by FXMLLoader
+    private ComboBox<Integer> cmbAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbUtente"
-    private ComboBox<?> cmbUtente; // Value injected by FXMLLoader
+    private ComboBox<User> cmbUtente; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtX1"
     private TextField txtX1; // Value injected by FXMLLoader
@@ -55,15 +59,153 @@ public class FXMLController {
     @FXML
     void doCreaGrafo(ActionEvent event) {
 
+    	this.txtResult.clear();
+
+     	String input = this.txtN.getText();
+     	
+     	Integer n = 0;
+     	
+     	try {
+     		
+     		n = Integer.parseInt(input);
+     		
+     	} catch(NumberFormatException e) {
+     		
+     		this.txtResult.setText("Inserisci un valore numerico a N !");
+     		return;
+     		
+     	}
+     	
+     	Integer anno = this.cmbAnno.getValue();
+     	
+     	if(anno == null) {
+     		
+     		this.txtResult.appendText("Scegli un anno!");
+     		return;
+     		
+     	}
+     	
+     	this.model.creaGrafo(n, anno);
+    	
+
+        this.txtResult.appendText(
+        		String.format("Grafo creato con %d vertici e %d archi \n", this.model.getNNodes(), this.model.getNArchi()));
+        
+        
+      this.cmbUtente.getItems().clear();
+      this.cmbUtente.getItems().addAll(this.model.getVertici());
+    	
+    	
+
+    	
+    	
     }
 
     @FXML
     void doUtenteSimile(ActionEvent event) {
+    	
+    	this.txtResult.clear();
+    	
+        
+    	if(!this.model.isGrafoLoaded()) {
+    		
+    		this.txtResult.setText("Crea grafo prima!");
+    		return;
+    		
+    	}
+    	
+    	User u = this.cmbUtente.getValue();
+    	
+    	if(u == null) {
+    		
+    		this.txtResult.appendText("Scegli un utente prima!");
+    		return;
+    		
+    	}
+    	
+    	List<User> users = this.model.utentiPiuSimili(u);
+    	
+    	this.txtResult.appendText("Utenti più simili a " + u + "\n\n");
+    	
+    	for(User us : users) {
+    		
+    		this.txtResult.appendText(us + "\t\t GRADO: " + this.model.getMax()  +"\n");
+    		
+    	}
+    	
+    	
 
     }
     
     @FXML
     void doSimula(ActionEvent event) {
+    	
+    	this.txtResult.clear();
+        
+    	
+    	if(!this.model.isGrafoLoaded()) {
+    		
+    		this.txtResult.setText("Crea grafo prima!");
+    		return;
+    		
+    	}
+    	
+     	String input1 = this.txtX1.getText();
+     	
+     	Integer x1 = 0;
+     	
+     	try {
+     		
+     		x1 = Integer.parseInt(input1);
+     		
+     	} catch(NumberFormatException e) {
+     		
+     		this.txtResult.setText("Inserisci un valore numerico a X1!");
+     		return;
+     		
+     	}
+     	
+     	String input2 = this.txtX2.getText();
+     	
+     	Integer x2 = 0;
+     	
+     	try {
+     		
+     		x2 = Integer.parseInt(input2);
+     		
+     	} catch(NumberFormatException e) {
+     		
+     		this.txtResult.setText("Inserisci un valore numerico a X2!");
+     		return;
+     		
+     	}
+    	
+     	if(x2 > this.model.getNNodes()) {
+     		
+     		this.txtResult.appendText("Numero utenti maggiore di quelli disponibili!");
+     		return;
+     		
+     	}
+     	
+     	if(x1 >= x2) {
+     		
+     		this.txtResult.appendText("Il numero di intervistatori deve essere minore del numero di utenti da intervistare! ");
+     		return;
+     		
+     	}
+     	
+     	SimulatorResult sr = this.model.Simula(x1, x2);
+     	
+    	this.txtResult.appendText("Simulazione effettuata in " + sr.getNumGiorni() + " giorni \n");
+    	
+    	Map<Integer, Integer> mappaInterviste = sr.getGiornalistaNumIntervistati();
+    	
+    	for(Integer i : mappaInterviste.keySet()) {
+    		
+    		this.txtResult.appendText("Giornalista " + i + "  =  " + mappaInterviste.get(i) + "\n");
+    		
+    	}
+     	
 
     }
     
@@ -84,5 +226,11 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	for(int i=2005; i<=2013; i++) {
+    		
+    		this.cmbAnno.getItems().add(i);
+    		
+    	}
     }
 }
